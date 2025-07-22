@@ -185,21 +185,16 @@
     function renderAttendance() {
       attendanceForms.innerHTML = "";
 
-      const topRow = document.createElement("div");
-      topRow.style.display = "flex";
-      topRow.style.justifyContent = "space-between";
-      topRow.style.alignItems = "center";
-      topRow.style.marginBottom = "1em";
+      const title = document.createElement("div");
+      title.innerHTML = `
+        <strong>FULL MONTH ATTENDANCE</strong><br/>
+        <strong>Legend:</strong> <span style='color:green'>Green = Present</span>, 
+        <span style='color:red'>Red = Absent</span>, 
+        <span style='color:gray'>Gray = No Meeting</span><br/><br/>
+      `;
+      attendanceForms.appendChild(title);
 
-      const fullMonthLabel = document.createElement("strong");
-      fullMonthLabel.textContent = "FULL MONTH ATTENDANCE";
-      topRow.appendChild(fullMonthLabel);
-
-      const legend = document.createElement("div");
-      legend.innerHTML = `<strong>Legend:</strong> <span style='color:green'>Green = Present</span>, <span style='color:red'>Red = Absent</span>, <span style='color:gray'>Gray = No Meeting</span>`;
-      topRow.appendChild(legend);
-
-      attendanceForms.appendChild(topRow);
+      
 
       sections.forEach(section => {
         const label = document.createElement("label");
