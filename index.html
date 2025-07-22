@@ -171,7 +171,11 @@
         const cell = document.createElement("div");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.addEventListener('change', updateDevotionCount);
+        checkbox.checked = JSON.parse(localStorage.getItem(`devotion_${currentMonth}_${i}`)) || false;
+        checkbox.addEventListener('change', () => {
+          localStorage.setItem(`devotion_${currentMonth}_${i}`, checkbox.checked);
+          updateDevotionCount();
+        });
         cell.innerHTML = `${i}<br>`;
         cell.appendChild(checkbox);
         calendarDiv.appendChild(cell);
@@ -191,12 +195,11 @@
       fullMonthLabel.textContent = "FULL MONTH ATTENDANCE";
       topRow.appendChild(fullMonthLabel);
 
-      attendanceForms.appendChild(topRow);
-
       const legend = document.createElement("div");
       legend.innerHTML = `<strong>Legend:</strong> <span style='color:green'>Green = Present</span>, <span style='color:red'>Red = Absent</span>, <span style='color:gray'>Gray = No Meeting</span>`;
-      legend.style.marginBottom = "1em";
-      attendanceForms.appendChild(legend);
+      topRow.appendChild(legend);
+
+      attendanceForms.appendChild(topRow);
 
       sections.forEach(section => {
         const label = document.createElement("label");
@@ -209,9 +212,12 @@
           const btn = document.createElement("button");
           const weekLabels = ["1st week", "2nd week", "3rd week", "4th week", "5th week"];
           btn.textContent = weekLabels[i - 1];
+          const savedState = localStorage.getItem(`attendance_${currentMonth}_${section}_${i}`);
+          if (savedState) btn.className = savedState;
           btn.onclick = () => {
             const next = btn.classList.contains("P") ? "A" : btn.classList.contains("A") ? "NM" : "P";
             btn.className = next;
+            localStorage.setItem(`attendance_${currentMonth}_${section}_${i}`, next);
           };
           grid.appendChild(btn);
         }
