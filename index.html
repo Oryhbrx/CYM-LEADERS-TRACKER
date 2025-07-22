@@ -44,21 +44,35 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .form-section label {
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 1em;
+    }
+    .calendar div {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      text-align: center;
+      font-size: 14px;
+    }
+    .calendar input[type="checkbox"] {
+      margin-top: 5px;
+    }
+    .attendance-section {
+      margin-top: 2em;
+    }
+    .attendance-section label {
+      font-weight: bold;
       display: block;
       margin-top: 1em;
-      font-weight: bold;
-    }
-    .form-section input[type="text"], .form-section select {
-      width: 100%;
-      padding: 0.5em;
-      margin-top: 0.5em;
     }
     .attendance-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
       gap: 4px;
-      margin-top: 1em;
+      margin-top: 0.5em;
     }
     .attendance-grid button {
       padding: 0.4em;
@@ -80,41 +94,33 @@
     <div class="month-selector" id="month-selector"></div>
     <div class="form-section">
       <h2 id="month-title">January</h2>
-      <label for="devotion">Total Devotion</label>
-      <input type="text" id="devotion" placeholder="e.g. 22/31" />
-
-      <label for="prayer">Total Prayer Cell</label>
-      <input type="text" id="prayer" placeholder="e.g. 4/4" />
-
-      <div id="attendance-forms"></div>
+      <h3>DEVOTION: <span id='devotion-count'>0</span> days checked</h3>
+      <div id="calendar" class="calendar"></div>
+      <div class="attendance-section" id="attendance-forms"></div>
     </div>
   </div>
 
-  <!-- Firebase & App Logic -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
   <script>
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-  </script>
-  <script>
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const sections = ["W12 MEETING","W12 DISCIPLESHIP","CELL GROUP","SUNDAY SERVICE","CYM NIGHT","THURSDAY TRAINING","PRAYER MEETING"];
+    const months = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
 
+    const sections = [
+      "W12 MEETING (with your leader)",
+      "W12 DISCIPLESHIP (with yout disciples_",
+      "CELL GROUP",
+      "SUNDAY SERVICE",
+      "CYM NIGHT",
+      "THURSDAY NIGHT TRAINING",
+      "PRAYER MEETINGS"
+    ];
+
+    const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
     const monthSelector = document.getElementById("month-selector");
-    const attendanceForms = document.getElementById("attendance-forms");
     const monthTitle = document.getElementById("month-title");
+    const calendarDiv = document.getElementById("calendar");
+    const attendanceForms = document.getElementById("attendance-forms");
 
     let currentMonth = 0;
 
@@ -127,15 +133,69 @@
           currentMonth = index;
           document.querySelectorAll(".month-selector button").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
-          loadMonthData();
+          renderCalendar();
+          renderAttendance();
         };
         monthSelector.appendChild(btn);
       });
     }
 
-    function loadMonthData() {
-      monthTitle.textContent = months[currentMonth];
+    function updateDevotionCount() {
+      const checkboxes = document.querySelectorAll('#calendar input[type="checkbox"]');
+      const count = Array.from(checkboxes).filter(cb => cb.checked).length;
+      document.getElementById('devotion-count').textContent = count;
+    }
+
+    function renderCalendar() {
+      const year = 2025;
+      const month = currentMonth;
+      const days = daysInMonth(month, year);
+      monthTitle.textContent = months[month];
+      calendarDiv.innerHTML = "";
+
+      const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      weekdays.forEach(day => {
+        const dayCell = document.createElement("div");
+        dayCell.style.fontWeight = "bold";
+        dayCell.textContent = day;
+        calendarDiv.appendChild(dayCell);
+      });
+
+      const firstDay = new Date(year, month, 1).getDay();
+      for (let i = 0; i < firstDay; i++) {
+        calendarDiv.appendChild(document.createElement("div"));
+      }
+
+      for (let i = 1; i <= days; i++) {
+        const cell = document.createElement("div");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.addEventListener('change', updateDevotionCount);
+        cell.innerHTML = `${i}<br>`;
+        cell.appendChild(checkbox);
+        calendarDiv.appendChild(cell);
+      }
+    }
+
+    function renderAttendance() {
       attendanceForms.innerHTML = "";
+
+      const topRow = document.createElement("div");
+      topRow.style.display = "flex";
+      topRow.style.justifyContent = "space-between";
+      topRow.style.alignItems = "center";
+      topRow.style.marginBottom = "1em";
+
+      const fullMonthLabel = document.createElement("strong");
+      fullMonthLabel.textContent = "FULL MONTH ATTENDANCE";
+      topRow.appendChild(fullMonthLabel);
+
+      attendanceForms.appendChild(topRow);
+
+      const legend = document.createElement("div");
+      legend.innerHTML = `<strong>Legend:</strong> <span style='color:green'>Green = Present</span>, <span style='color:red'>Red = Absent</span>, <span style='color:gray'>Gray = No Meeting</span>`;
+      legend.style.marginBottom = "1em";
+      attendanceForms.appendChild(legend);
 
       sections.forEach(section => {
         const label = document.createElement("label");
@@ -146,7 +206,8 @@
         grid.className = "attendance-grid";
         for (let i = 1; i <= 5; i++) {
           const btn = document.createElement("button");
-          btn.textContent = `${i}`;
+          const weekLabels = ["1st week", "2nd week", "3rd week", "4th week", "5th week"];
+          btn.textContent = weekLabels[i - 1];
           btn.onclick = () => {
             const next = btn.classList.contains("P") ? "A" : btn.classList.contains("A") ? "NM" : "P";
             btn.className = next;
@@ -158,7 +219,8 @@
     }
 
     renderMonthButtons();
-    loadMonthData();
+    renderCalendar();
+    renderAttendance();
   </script>
 </body>
 </html>
