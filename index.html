@@ -90,13 +90,20 @@
     <h1>CYM 2025 Leader Tracker</h1>
     <div id="user-info"></div>
   </header>
-  <div class="container">
-    <p style="background:#fffae6; padding:10px; border:1px solid #f0c36d; border-radius:5px; font-weight:bold; text-align:center;">📸 TAKE A SCREENSHOT AND SEND IT TO THE QUALITY COMMITTEE</p>
+
+  <div style="text-align:center; margin: 15px;">
+    <button onclick="saveFullPageImage()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+      "click here" to save Full Page as Image
+    </button>
+  </div>
+    
     <div style="text-align:center; margin-top:10px; margin-bottom:20px;">
       <label for="username"><strong>Insert Name:</strong></label>
       <input type="text" id="username" name="username" placeholder="Type your full name..." style="padding:5px; width:80%; max-width:400px; margin-top:5px;" />
     </div>
+    
     <div class="month-selector" id="month-selector"></div>
+    
     <div class="form-section">
       <h2 id="month-title">January</h2>
       <h3>DEVOTION: <span id='devotion-count'>0</span> days checked</h3>
@@ -104,6 +111,9 @@
       <div class="attendance-section" id="attendance-forms"></div>
     </div>
   </div>
+
+  <!-- Screenshot library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
     const months = [
@@ -184,6 +194,8 @@
         cell.appendChild(checkbox);
         calendarDiv.appendChild(cell);
       }
+
+      updateDevotionCount();
     }
 
     function renderAttendance() {
@@ -197,8 +209,6 @@
         <span style='color:gray'>Gray = No Meeting</span><br/><br/>
       `;
       attendanceForms.appendChild(title);
-
-      
 
       sections.forEach(section => {
         const label = document.createElement("label");
@@ -224,6 +234,34 @@
       });
     }
 
+    function saveFullPageImage() {
+      html2canvas(document.body, {
+        scrollY: -window.scrollY,
+        useCORS: true
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'cym-leader-tracker.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Optional: Load saved username
+    const usernameInput = document.getElementById("username");
+    const userInfo = document.getElementById("user-info");
+    usernameInput.addEventListener("input", () => {
+      localStorage.setItem("username", usernameInput.value);
+      userInfo.textContent = "User: " + usernameInput.value;
+    });
+    window.addEventListener("load", () => {
+      const savedName = localStorage.getItem("username");
+      if (savedName) {
+        usernameInput.value = savedName;
+        userInfo.textContent = "User: " + savedName;
+      }
+    });
+
+    // Initial Render
     renderMonthButtons();
     renderCalendar();
     renderAttendance();
